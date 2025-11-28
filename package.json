@@ -1,0 +1,30 @@
+{
+  "name": "becsy-game",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@trivago/prettier-plugin-sort-imports": "^6.0.0",
+    "@webgpu/types": "^0.1.66",
+    "prettier": "^3.6.2",
+    "typescript": "~5.9.3",
+    "unplugin-typegpu": "^0.8.0",
+    "vite": "npm:rolldown-vite@7.2.5"
+  },
+  "overrides": {
+    "vite": "npm:rolldown-vite@7.2.5"
+  },
+  "dependencies": {
+    "@lastolivegames/becsy": "^0.15.5",
+    "@phughesmcr/miski": "npm:@jsr/phughesmcr__miski@^0.2.1",
+    "@typegpu/sdf": "^0.8.0",
+    "geotic": "^4.3.2",
+    "miniplex": "^2.0.0",
+    "typegpu": "^0.8.2"
+  }
+}
