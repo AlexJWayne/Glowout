@@ -1,4 +1,3 @@
-import { COLS, GRID_HEIGHT, ROWS } from './bricks'
 import type { UniformsStruct } from './render-wgpu'
 import * as sdf from '@typegpu/sdf'
 import tgpu, { type TgpuBufferReadonly } from 'typegpu'
@@ -8,7 +7,7 @@ import * as std from 'typegpu/std'
 const MAX_STEPS = d.i32(64)
 const MAX_DISTANCE = d.f32(6)
 const EPSILON = d.f32(0.001)
-const CAMERA_POSTITION = d.vec3f(0, 0, 3)
+const CAMERA_POSTITION = d.vec3f(0, 0, 3.2)
 const LIGHT_DIRECTION = d.vec3f(0.6, 0.6, 1)
 
 /** Large distance used for empty space. */
@@ -24,6 +23,7 @@ const enum Obj {
 const MarchResult = d.struct({
   id: d.i32,
   distance: d.f32,
+  color: d.vec3f,
 })
 
 export function createFragmentShader(
@@ -59,14 +59,26 @@ function scene(
   let ball = sdBall(uniforms, p)
   let bricks = sdBricks(uniforms, p)
 
-  if (paddle < ball && paddle < bricks) {
-    return MarchResult({ id: Obj.PADDLE, distance: paddle })
+  if (paddle < ball && paddle < bricks.distance) {
+    return MarchResult({
+      id: Obj.PADDLE,
+      distance: paddle,
+      color: d.vec3f(1),
+    })
   }
 
-  if (ball < paddle && ball < bricks)
-    return MarchResult({ id: Obj.BALL, distance: ball })
+  if (ball < paddle && ball < bricks.distance)
+    return MarchResult({
+      id: Obj.BALL,
+      distance: ball,
+      color: d.vec3f(0, 1, 0),
+    })
 
-  return MarchResult({ id: Obj.BRICK, distance: bricks })
+  return MarchResult({
+    id: Obj.BRICK,
+    distance: bricks.distance,
+    color: bricks.color,
+  })
 }
 
 function getNormal(
@@ -98,10 +110,10 @@ function getNormal(
   }
 
   if (id === Obj.BRICK) {
-    const n1 = k1.mul(sdBricks(uniforms, p.add(k1.mul(EPSILON))))
-    const n2 = k2.mul(sdBricks(uniforms, p.add(k2.mul(EPSILON))))
-    const n3 = k3.mul(sdBricks(uniforms, p.add(k3.mul(EPSILON))))
-    const n4 = k4.mul(sdBricks(uniforms, p.add(k4.mul(EPSILON))))
+    const n1 = k1.mul(sdBricks(uniforms, p.add(k1.mul(EPSILON))).distance)
+    const n2 = k2.mul(sdBricks(uniforms, p.add(k2.mul(EPSILON))).distance)
+    const n3 = k3.mul(sdBricks(uniforms, p.add(k3.mul(EPSILON))).distance)
+    const n4 = k4.mul(sdBricks(uniforms, p.add(k4.mul(EPSILON))).distance)
     return std.normalize(n1.add(n2).add(n3).add(n4))
   }
 
@@ -133,11 +145,22 @@ function raymarch(uniforms: d.Infer<UniformsStruct>, uv: d.v2f): d.v3f {
 
   if (!hit) return d.vec3f(0)
 
-  const lightIntensity = std.max(std.dot(normal, LIGHT_DIRECTION), 0)
+  const lightDirection = std.normalize(
+    d.vec3f(std.sin(uniforms.time), std.cos(uniforms.time), 1),
+  )
+  const lightIntensity = std.max(std.dot(normal, lightDirection), 0)
+
   if (result.id === Obj.PADDLE) return d.vec3f(1, 1, 1).mul(lightIntensity)
-  if (result.id === Obj.BALL) return d.vec3f(0, 1, 0).mul(lightIntensity)
-  if (result.id === Obj.BRICK)
-    return std.mix(d.vec3f(0.2, 0, 0.2), d.vec3f(1, 0, 1), lightIntensity)
+  if (result.id === Obj.BALL) {
+    const base = lighting(result.color, normal, 0.1)
+    const spec = specular(normal, rayDirection, lightDirection, 0.95)
+    return base.add(spec)
+  }
+  if (result.id === Obj.BRICK) {
+    const base = lighting(result.color, normal, 0.2)
+    const spec = specular(normal, rayDirection, lightDirection, 0.99)
+    return base.add(spec)
+  }
 
   return d.vec3f(0.5)
 }
@@ -163,16 +186,41 @@ function sdBricks(uniforms: d.Infer<UniformsStruct>, p: d.v3f) {
   'use gpu'
 
   let dist = EMPTY
+  let color = d.vec3f(1)
   for (let i = 0; i < uniforms.bricks.length; i++) {
     const brick = uniforms.bricks[i]
-    dist = sdf.opUnion(dist, sdBrick(p, brick.position, brick.size))
+    const newDist = sdBrick(p, brick.position, brick.size)
+    if (newDist < dist) color = brick.color
+    dist = sdf.opSmoothUnion(dist, newDist, 0.04)
   }
 
-  return dist
+  return MarchResult({ id: Obj.BRICK, distance: dist, color })
 }
 
 function sdBrick(p: d.v3f, position: d.v2f, size: d.v2f) {
   'use gpu'
   const position3 = d.vec3f(position, 0)
-  return sdf.sdBox3d(p.sub(position3), d.vec3f(size.div(2), 0.1)) + 0.005
+  return (
+    sdf.sdBox3d(p.sub(position3), d.vec3f(size.div(2).sub(0.04), 0.1)) - 0.05
+  )
 }
+
+function lighting(color: d.v3f, normal: d.v3f, ambient: number) {
+  'use gpu'
+  const light = std.max(std.dot(normal, LIGHT_DIRECTION), 0)
+  return std.mix(color.mul(ambient), color, light)
+}
+
+function specular(
+  normal: d.v3f,
+  viewDirection: d.v3f,
+  lightDirection: d.v3f,
+  shininess: number,
+) {
+  'use gpu'
+  const h = std.normalize(viewDirection.add(lightDirection))
+  const v = std.max(std.dot(h, normal), 0.0)
+  return std.pow(v, shininess)
+}
+
+toString

@@ -1,4 +1,4 @@
-import { ALIVE_COUNT, COLS, ROWS, brickCount } from './bricks'
+import { ALIVE_COUNT } from './bricks'
 import { listenForInput } from './input'
 import { createFragmentShader } from './render-wgpu-shader'
 import type { Queries } from './world'
@@ -6,8 +6,8 @@ import tgpu from 'typegpu'
 import * as d from 'typegpu/data'
 
 const canvas = document.getElementById('wgpu') as HTMLCanvasElement
-canvas.width = 500
-canvas.height = 500
+canvas.width = 800
+canvas.height = 800
 listenForInput(canvas)
 
 const root = await tgpu.init()
@@ -33,6 +33,7 @@ const UniformsStruct = d.struct({
     d.struct({
       position: d.vec2f,
       size: d.vec2f,
+      color: d.vec3f,
     }),
     ALIVE_COUNT,
   ),
@@ -85,10 +86,6 @@ console.log(
 export function renderGameWgpu(queries: Queries, timestamp: number) {
   const paddleEntity = queries.paddle.first!
   const ballEntity = queries.ball.first!
-  const bricks = queries.bricks.entities.map((entity) => ({
-    position: entity.position,
-    size: entity.size,
-  }))
 
   uniformsBuffer.write({
     time: timestamp / 1000,
@@ -97,7 +94,11 @@ export function renderGameWgpu(queries: Queries, timestamp: number) {
       position: ballEntity.position,
       radius: ballEntity.ball.radius,
     },
-    bricks,
+    bricks: queries.bricks.entities.map((entity) => ({
+      position: entity.position,
+      size: entity.size,
+      color: entity.brick.color,
+    })),
   })
   pipeline
     .withColorAttachment({

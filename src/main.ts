@@ -1,4 +1,4 @@
-import { renderGame2d } from './render-2d'
+// import { renderGame2d } from './render-2d'
 import { renderGameWgpu } from './render-wgpu'
 import {
   bounceBallOnWalls,
@@ -23,7 +23,7 @@ async function tick(timestampMs: DOMHighResTimeStamp) {
   hitBallWithPaddle(queries)
   hitBricksWithBall(world, queries)
 
-  renderGame2d(queries)
+  // renderGame2d(queries)
   renderGameWgpu(queries, timestampMs)
 
   requestAnimationFrame(tick)

@@ -9,14 +9,16 @@ export function addBall(world: GameWorld) {
 
 function createBall(): Entity {
   return {
-    ball: { radius: 0.05 },
+    ball: { radius: 0.07 },
     position: d.vec2f(0, 0),
-    velocity: std.normalize(
-      d.vec2f(
-        Math.random() * 2 - 1, //
-        Math.random() + 0.2,
-      ),
-    ),
+    velocity: std
+      .normalize(
+        d.vec2f(
+          Math.random() * 2 - 1, //
+          Math.random() + 0.2,
+        ),
+      )
+      .mul(2),
   }
 }
 

@@ -1,11 +1,12 @@
 import { fillCenterRect, strokeCenterRect } from './lib'
 import type { Entity, GameWorld, Queries } from './world'
 import * as d from 'typegpu/data'
+import * as std from 'typegpu/std'
 
 export const COLS = 8
 export const ROWS = 4
 export const GRID_HEIGHT = 0.5
-export const ALIVE_COUNT = 6
+export const ALIVE_COUNT = 10
 
 export const brickCount = COLS * ROWS
 
@@ -49,7 +50,11 @@ export function addBrick(world: GameWorld, queries: Queries) {
 
 function createBrick(gridPos: d.v2u): Entity {
   return {
-    brick: gridPos,
+    brick: {
+      color: std.normalize(
+        d.vec3f(Math.random(), Math.random(), Math.random()),
+      ),
+    },
     position: getBrickPosition(gridPos),
     size: d.vec2f(2 / COLS, (1 / ROWS) * GRID_HEIGHT),
   }

@@ -12,7 +12,7 @@ export type Entity = {
   velocity?: d.v2f
 
   paddle?: true
-  brick?: d.v2u
+  brick?: { color: d.v3f }
   ball?: { radius: number }
 }
 

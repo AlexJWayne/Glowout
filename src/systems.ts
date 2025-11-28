@@ -29,19 +29,15 @@ export function bounceBallOnWalls(queries: Queries) {
   } = ballEntity
 
   if (position.x + radius > 1 && velocity.x > 0) {
-    position.x = 2 - radius - position.x
     velocity.x = -velocity.x
   }
   if (position.x - radius < -1 && velocity.x < 0) {
-    position.x = -2 + radius - position.x
     velocity.x = -velocity.x
   }
   if (position.y + radius > 1 && velocity.y > 0) {
-    position.y = 2 - radius - position.y
     velocity.y = -velocity.y
   }
   if (position.y - radius < -1 && velocity.y < 0) {
-    position.y = -2 + radius - position.y
     velocity.y = -velocity.y
   }
 }
