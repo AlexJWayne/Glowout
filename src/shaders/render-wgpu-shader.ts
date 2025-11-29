@@ -1,30 +1,16 @@
-import type { UniformsStruct } from './render-wgpu'
+import { lighting, specular } from '../lib'
+import type { UniformsStruct } from '../render-wgpu'
+import { renderBrick, sdBricks } from './bricks'
+import { MarchResult, Obj } from './march-result'
 import * as sdf from '@typegpu/sdf'
 import tgpu, { type TgpuBufferReadonly } from 'typegpu'
 import * as d from 'typegpu/data'
 import * as std from 'typegpu/std'
 
-const MAX_STEPS = d.i32(64)
+const MAX_STEPS = d.i32(80)
 const MAX_DISTANCE = d.f32(6)
 const EPSILON = d.f32(0.001)
 const CAMERA_POSTITION = d.vec3f(0, 0, 3.2)
-const LIGHT_DIRECTION = d.vec3f(0.6, 0.6, 1)
-
-/** Large distance used for empty space. */
-const EMPTY = d.f32(1e20)
-
-const enum Obj {
-  NONE,
-  PADDLE,
-  BALL,
-  BRICK,
-}
-
-const MarchResult = d.struct({
-  id: d.i32,
-  distance: d.f32,
-  color: d.vec3f,
-})
 
 export function createFragmentShader(
   uniforms: TgpuBufferReadonly<UniformsStruct>,
@@ -33,15 +19,20 @@ export function createFragmentShader(
     in: { uv: d.vec2f },
     out: d.vec4f,
   })(({ uv }) => {
-    let v = raymarch(uniforms.$, uv)
-    return d.vec4f(v, 1)
+    const rayDirection = std.normalize(d.vec3f(uv, -3))
+
+    const result = raymarch(uniforms.$, rayDirection)
+    const normal = getNormal(uniforms.$, result)
+    const color = renderHit(uniforms.$, result, normal, rayDirection)
+    return d.vec4f(color, 1)
+
     // return d.vec4f(
     //   std.fract(
     //     d
     //       .vec3f(
-    //         sdBricks(uniforms.$, d.vec3f(uv, 0)),
-    //         sdPaddle(uniforms.$, d.vec3f(uv, 0)),
-    //         sdBall(uniforms.$, d.vec3f(uv, 0)),
+    //         sdBricks(uniforms.$, d.vec3f(uv, 0)).distance,
+    //         // sdPaddle(uniforms.$, d.vec3f(uv, 0)),
+    //         // sdBall(uniforms.$, d.vec3f(uv, 0)),
     //       )
     //       .mul(10),
     //   ),
@@ -50,10 +41,39 @@ export function createFragmentShader(
   })
 }
 
-function scene(
+function renderHit(
   uniforms: d.Infer<UniformsStruct>,
-  p: d.v3f,
-): d.Infer<typeof MarchResult> {
+  result: MarchResult,
+  normal: d.v3f,
+  rayDirection: d.v3f,
+) {
+  'use gpu'
+
+  const lightDirection = std.normalize(
+    d.vec3f(
+      std.sin(uniforms.time * 0.5), //
+      std.cos(uniforms.time * 0.5),
+      4,
+    ),
+  )
+  const lightIntensity = std.max(std.dot(normal, lightDirection), 0)
+
+  if (result.id === Obj.PADDLE) return d.vec3f(1, 1, 1).mul(lightIntensity)
+
+  if (result.id === Obj.BALL) {
+    const base = lighting(d.vec3f(1, 1, 0), normal, lightDirection, 0.1)
+    const spec = specular(normal, rayDirection, lightDirection, d.f32(3))
+    return base.add(spec)
+  }
+
+  if (result.id === Obj.BRICK) {
+    return renderBrick(uniforms, result, normal, rayDirection, lightDirection)
+  }
+
+  return d.vec3f(0)
+}
+
+function scene(uniforms: d.Infer<UniformsStruct>, p: d.v3f): MarchResult {
   'use gpu'
   let paddle = sdPaddle(uniforms, p)
   let ball = sdBall(uniforms, p)
@@ -62,31 +82,36 @@ function scene(
   if (paddle < ball && paddle < bricks.distance) {
     return MarchResult({
       id: Obj.PADDLE,
+      pos: p,
       distance: paddle,
-      color: d.vec3f(1),
+      brickIndex: -1,
     })
   }
 
   if (ball < paddle && ball < bricks.distance)
     return MarchResult({
       id: Obj.BALL,
+      pos: p,
       distance: ball,
-      color: d.vec3f(0, 1, 0),
+      brickIndex: -1,
     })
 
   return MarchResult({
     id: Obj.BRICK,
+    pos: p,
     distance: bricks.distance,
-    color: bricks.color,
+    brickIndex: bricks.brickIndex,
   })
 }
 
 function getNormal(
   uniforms: d.Infer<UniformsStruct>,
-  p: d.v3f,
-  id: number,
+  result: MarchResult,
 ): d.v3f {
   'use gpu'
+
+  const id = result.id
+  const p = result.pos
 
   const k1 = d.vec3f(1.0, -1.0, -1.0)
   const k2 = d.vec3f(-1.0, -1.0, 1.0)
@@ -119,14 +144,15 @@ function getNormal(
 
   return d.vec3f(1, 0, 0)
 }
-function raymarch(uniforms: d.Infer<UniformsStruct>, uv: d.v2f): d.v3f {
-  'use gpu'
 
-  const rayDirection = std.normalize(d.vec3f(uv, -3))
+function raymarch(
+  uniforms: d.Infer<UniformsStruct>,
+  rayDirection: d.v3f,
+): MarchResult {
+  'use gpu'
 
   let totalDist = d.f32()
   let result = MarchResult()
-  let normal = d.vec3f(0)
   let hit = false
 
   for (let i = 0; i < MAX_STEPS; i++) {
@@ -135,7 +161,6 @@ function raymarch(uniforms: d.Infer<UniformsStruct>, uv: d.v2f): d.v3f {
 
     if (result.distance < EPSILON) {
       hit = true
-      normal = getNormal(uniforms, p, result.id)
       break
     }
     totalDist += result.distance
@@ -143,26 +168,16 @@ function raymarch(uniforms: d.Infer<UniformsStruct>, uv: d.v2f): d.v3f {
     if (totalDist > MAX_DISTANCE) break
   }
 
-  if (!hit) return d.vec3f(0)
-
-  const lightDirection = std.normalize(
-    d.vec3f(std.sin(uniforms.time), std.cos(uniforms.time), 1),
-  )
-  const lightIntensity = std.max(std.dot(normal, lightDirection), 0)
-
-  if (result.id === Obj.PADDLE) return d.vec3f(1, 1, 1).mul(lightIntensity)
-  if (result.id === Obj.BALL) {
-    const base = lighting(result.color, normal, 0.1)
-    const spec = specular(normal, rayDirection, lightDirection, 0.95)
-    return base.add(spec)
-  }
-  if (result.id === Obj.BRICK) {
-    const base = lighting(result.color, normal, 0.2)
-    const spec = specular(normal, rayDirection, lightDirection, 0.99)
-    return base.add(spec)
+  if (!hit) {
+    return MarchResult({
+      id: Obj.NONE,
+      pos: result.pos,
+      distance: totalDist,
+      brickIndex: -1,
+    })
   }
 
-  return d.vec3f(0.5)
+  return result
 }
 
 function sdPaddle(uniforms: d.Infer<UniformsStruct>, p: d.v3f) {
@@ -181,46 +196,3 @@ function sdBall(uniforms: d.Infer<UniformsStruct>, p: d.v3f) {
   const position3 = d.vec3f(uniforms.ball.position, 0)
   return sdf.sdSphere(p.sub(position3), uniforms.ball.radius)
 }
-
-function sdBricks(uniforms: d.Infer<UniformsStruct>, p: d.v3f) {
-  'use gpu'
-
-  let dist = EMPTY
-  let color = d.vec3f(1)
-  for (let i = 0; i < uniforms.bricks.length; i++) {
-    const brick = uniforms.bricks[i]
-    const newDist = sdBrick(p, brick.position, brick.size)
-    if (newDist < dist) color = brick.color
-    dist = sdf.opSmoothUnion(dist, newDist, 0.04)
-  }
-
-  return MarchResult({ id: Obj.BRICK, distance: dist, color })
-}
-
-function sdBrick(p: d.v3f, position: d.v2f, size: d.v2f) {
-  'use gpu'
-  const position3 = d.vec3f(position, 0)
-  return (
-    sdf.sdBox3d(p.sub(position3), d.vec3f(size.div(2).sub(0.04), 0.1)) - 0.05
-  )
-}
-
-function lighting(color: d.v3f, normal: d.v3f, ambient: number) {
-  'use gpu'
-  const light = std.max(std.dot(normal, LIGHT_DIRECTION), 0)
-  return std.mix(color.mul(ambient), color, light)
-}
-
-function specular(
-  normal: d.v3f,
-  viewDirection: d.v3f,
-  lightDirection: d.v3f,
-  shininess: number,
-) {
-  'use gpu'
-  const h = std.normalize(viewDirection.add(lightDirection))
-  const v = std.max(std.dot(h, normal), 0.0)
-  return std.pow(v, shininess)
-}
-
-toString

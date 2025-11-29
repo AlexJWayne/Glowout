@@ -1,6 +1,6 @@
 import { ALIVE_COUNT } from './bricks'
 import { listenForInput } from './input'
-import { createFragmentShader } from './render-wgpu-shader'
+import { createFragmentShader } from './shaders/render-wgpu-shader'
 import type { Queries } from './world'
 import tgpu from 'typegpu'
 import * as d from 'typegpu/data'
@@ -23,7 +23,7 @@ const UniformsStruct = d.struct({
   time: d.f32,
   paddle: d.struct({
     position: d.vec2f,
-    size: d.vec2f,
+    size: d.vec3f,
   }),
   ball: d.struct({
     position: d.vec2f,
@@ -32,8 +32,10 @@ const UniformsStruct = d.struct({
   bricks: d.arrayOf(
     d.struct({
       position: d.vec2f,
-      size: d.vec2f,
+      size: d.vec3f,
       color: d.vec3f,
+      state: d.i32,
+      stateProgress: d.f32,
     }),
     ALIVE_COUNT,
   ),
@@ -98,6 +100,8 @@ export function renderGameWgpu(queries: Queries, timestamp: number) {
       position: entity.position,
       size: entity.size,
       color: entity.brick.color,
+      state: entity.brick.state,
+      stateProgress: entity.brick.stateProgress,
     })),
   })
   pipeline

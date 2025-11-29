@@ -1,14 +1,20 @@
+import { hsl2rgb } from './hsl'
 import { fillCenterRect, strokeCenterRect } from './lib'
 import type { Entity, GameWorld, Queries } from './world'
 import * as d from 'typegpu/data'
-import * as std from 'typegpu/std'
 
-export const COLS = 8
-export const ROWS = 4
-export const GRID_HEIGHT = 0.5
-export const ALIVE_COUNT = 10
+export const COLS = 6
+export const ROWS = 6
+export const GRID_HEIGHT = 1.4
+export const ALIVE_COUNT = 8
 
 export const brickCount = COLS * ROWS
+
+export const enum BrickState {
+  BIRTH,
+  ALIVE,
+  DYING,
+}
 
 export function addBricks(world: GameWorld, count = ALIVE_COUNT) {
   const locations: d.v2u[] = []
@@ -51,12 +57,16 @@ export function addBrick(world: GameWorld, queries: Queries) {
 function createBrick(gridPos: d.v2u): Entity {
   return {
     brick: {
-      color: std.normalize(
-        d.vec3f(Math.random(), Math.random(), Math.random()),
-      ),
+      color: hsl2rgb(d.vec3f(Math.random(), 1, 0.5)),
+      state: BrickState.BIRTH,
+      stateProgress: 0,
     },
     position: getBrickPosition(gridPos),
-    size: d.vec2f(2 / COLS, (1 / ROWS) * GRID_HEIGHT),
+    size: d.vec3f(
+      2 / COLS,
+      (1 / ROWS) * GRID_HEIGHT,
+      Math.random() * 0.5 + 0.1,
+    ),
   }
 }
 
@@ -66,6 +76,42 @@ export function getBrickPosition(gridPos: d.v2u): d.v2f {
     (gridPos.x / COLS) * 2 - 1 + 1 / COLS,
     1 - (gridPos.y / ROWS + 1 / ROWS) * GRID_HEIGHT,
   )
+}
+
+export function updateBricksState(queries: Queries, elapsed: number) {
+  for (const brickEntity of queries.bricks.entities) {
+    const { brick } = brickEntity
+    switch (brick.state) {
+      case BrickState.BIRTH:
+        brick.stateProgress += elapsed * 2
+        if (brick.stateProgress > 1) brick.state = BrickState.ALIVE
+        break
+
+      case BrickState.ALIVE:
+        break
+
+      case BrickState.DYING:
+        brick.stateProgress += elapsed * 2
+
+        if (brick.stateProgress > 1) {
+          brick.state = BrickState.BIRTH
+          brick.stateProgress = 0
+          brick.color = hsl2rgb(d.vec3f(Math.random(), 1, 0.5))
+          brickEntity.position = getBrickPosition(
+            d.vec2u(
+              Math.floor(Math.random() * COLS),
+              Math.floor(Math.random() * ROWS),
+            ),
+          )
+          brickEntity.size = d.vec3f(
+            2 / COLS,
+            (1 / ROWS) * GRID_HEIGHT,
+            Math.random() * 0.5 + 0.1,
+          )
+        }
+        break
+    }
+  }
 }
 
 export function renderBricks(ctx: CanvasRenderingContext2D, queries: Queries) {

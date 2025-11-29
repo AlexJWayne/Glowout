@@ -1,5 +1,5 @@
 import { addBall } from './ball'
-import { addBricks } from './bricks'
+import { BrickState, addBricks } from './bricks'
 import { addPaddle } from './paddle'
 import { World } from 'miniplex'
 import * as d from 'typegpu/data'
@@ -8,12 +8,16 @@ export type Queries = ReturnType<typeof createQueries>
 
 export type Entity = {
   position?: d.v2f
-  size?: d.v2f
+  size?: d.v3f
   velocity?: d.v2f
 
   paddle?: true
-  brick?: { color: d.v3f }
   ball?: { radius: number }
+  brick?: {
+    color: d.v3f
+    state: BrickState
+    stateProgress: number
+  }
 }
 
 export type GameWorld = World<Entity>

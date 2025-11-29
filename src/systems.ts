@@ -1,4 +1,4 @@
-import { addBrick } from './bricks'
+import { BrickState, addBrick } from './bricks'
 import { mouse } from './input'
 import type { GameWorld, Queries } from './world'
 
@@ -70,6 +70,8 @@ export function hitBricksWithBall(world: GameWorld, queries: Queries) {
   const ballRadius = ballEntity.ball.radius
 
   for (const brickEntity of queries.bricks.entities) {
+    if (brickEntity.brick.state !== BrickState.ALIVE) continue
+
     const { position, size } = brickEntity
     if (ballPosition.y + ballRadius < position.y - size.y / 2) continue
     if (ballPosition.y - ballRadius > position.y + size.y / 2) continue
@@ -77,7 +79,7 @@ export function hitBricksWithBall(world: GameWorld, queries: Queries) {
     if (ballPosition.x - ballRadius > position.x + size.x / 2) continue
 
     ballEntity.velocity.y = -ballEntity.velocity.y
-    world.remove(brickEntity)
-    addBrick(world, queries)
+    brickEntity.brick.state = BrickState.DYING
+    brickEntity.brick.stateProgress = 0
   }
 }
