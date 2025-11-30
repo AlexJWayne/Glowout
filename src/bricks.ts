@@ -1,6 +1,7 @@
 import { hsl2rgb } from './hsl'
 import { fillCenterRect, strokeCenterRect } from './lib'
 import type { Entity, GameWorld, Queries } from './world'
+import type { With } from 'miniplex'
 import * as d from 'typegpu/data'
 
 export const COLS = 6
@@ -60,6 +61,7 @@ function createBrick(gridPos: d.v2u): Entity {
       color: hsl2rgb(d.vec3f(Math.random(), 1, 0.5)),
       state: BrickState.BIRTH,
       stateProgress: 0,
+      location: gridPos,
     },
     position: getBrickPosition(gridPos),
     size: d.vec3f(
@@ -76,6 +78,22 @@ export function getBrickPosition(gridPos: d.v2u): d.v2f {
     (gridPos.x / COLS) * 2 - 1 + 1 / COLS,
     1 - (gridPos.y / ROWS + 1 / ROWS) * GRID_HEIGHT,
   )
+}
+
+function getRandomBrickLocation(entities: With<Entity, 'brick'>[]): d.v2u {
+  const used = new Set<string>()
+  for (const { brick } of entities) {
+    used.add(brick.location.toString())
+  }
+
+  let location: d.v2u | null = null
+  while (!location || used.has(location.toString())) {
+    location = d.vec2u(
+      Math.floor(Math.random() * COLS),
+      Math.floor(Math.random() * ROWS),
+    )
+  }
+  return location
 }
 
 export function updateBricksState(queries: Queries, elapsed: number) {
@@ -95,14 +113,10 @@ export function updateBricksState(queries: Queries, elapsed: number) {
 
         if (brick.stateProgress > 1) {
           brick.state = BrickState.BIRTH
+          brick.location = getRandomBrickLocation(queries.bricks.entities)
           brick.stateProgress = 0
           brick.color = hsl2rgb(d.vec3f(Math.random(), 1, 0.5))
-          brickEntity.position = getBrickPosition(
-            d.vec2u(
-              Math.floor(Math.random() * COLS),
-              Math.floor(Math.random() * ROWS),
-            ),
-          )
+          brickEntity.position = getBrickPosition(brick.location)
           brickEntity.size = d.vec3f(
             2 / COLS,
             (1 / ROWS) * GRID_HEIGHT,

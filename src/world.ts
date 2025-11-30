@@ -14,6 +14,7 @@ export type Entity = {
   paddle?: true
   ball?: { radius: number }
   brick?: {
+    location: d.v2u
     color: d.v3f
     state: BrickState
     stateProgress: number
