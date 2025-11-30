@@ -1,6 +1,8 @@
 import { BrickState, addBrick } from './bricks'
 import { mouse } from './input'
+import { remap } from './lib'
 import type { GameWorld, Queries } from './world'
+import * as std from 'typegpu/std'
 
 export function movePaddle(queries: Queries) {
   const { size, position } = queries.paddle.first!
@@ -37,8 +39,9 @@ export function bounceBallOnWalls(queries: Queries) {
   if (position.y + radius > 1 && velocity.y > 0) {
     velocity.y = -velocity.y
   }
-  if (position.y - radius < -1 && velocity.y < 0) {
+  if (position.y - radius < -1.5 && velocity.y < 0) {
     velocity.y = -velocity.y
+    ballEntity.velocity = std.normalize(velocity)
   }
 }
 
@@ -49,16 +52,25 @@ export function hitBallWithPaddle(queries: Queries) {
 
   const paddle = queries.paddle.first!
 
-  const ballBottom = ballEntity.position.y + ballEntity.ball.radius
-  const paddleTop = paddle.position.y - paddle.size.y / 2
+  const ballBottom = ballEntity.position.y - ballEntity.ball.radius
+  const ballTop = ballEntity.position.y + ballEntity.ball.radius
+
+  const paddleTop = paddle.position.y + paddle.size.y / 2
+  const paddleBottom = paddle.position.y - paddle.size.y / 2
 
   if (ballBottom > paddleTop) return
+  if (ballTop < paddleBottom) return
 
   const left = paddle.position.x - paddle.size.x / 2
   const right = paddle.position.x + paddle.size.x / 2
 
   if (ballEntity.position.x > left && ballEntity.position.x < right) {
+    const speed = std.length(ballEntity.velocity) + 0.2
+    const angle = remap(ballEntity.position.x, left, right, -1, 1)
+
     ballEntity.velocity.y = -ballEntity.velocity.y
+    ballEntity.velocity.x += angle * 1.5
+    ballEntity.velocity = std.normalize(ballEntity.velocity).mul(speed)
   }
 }
 

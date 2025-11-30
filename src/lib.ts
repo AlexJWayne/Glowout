@@ -61,6 +61,11 @@ export function easeInExpo(x: number): number {
   return std.pow(2, 10 * x - 10)
 }
 
+export function easeInSine(x: number): number {
+  'use gpu'
+  return 1 - std.cos((x * Math.PI) / 2)
+}
+
 export function lighting(
   color: d.v3f,
   normal: d.v3f,
@@ -82,4 +87,29 @@ export function specular(
   const h = std.normalize(viewDirection.add(lightDirection))
   const v = std.max(std.dot(h, normal), 0.0)
   return std.pow(v, shininess)
+}
+
+export function raySphereIntersect(
+  rayOrigin: d.v3f,
+  rayDirection: d.v3f,
+  center: d.v3f,
+  radius: number,
+): boolean {
+  'use gpu'
+  let oc = rayOrigin.sub(center)
+  let b = std.dot(oc, rayDirection)
+  let c = std.dot(oc, oc) - radius * radius
+  let disc = b * b - c
+  return disc >= 0.0
+}
+
+export function remap(
+  value: number,
+  inMin: number,
+  inMax: number,
+  outMin: number,
+  outMax: number,
+): number {
+  'use gpu'
+  return ((value - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin
 }

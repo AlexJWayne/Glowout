@@ -1,5 +1,11 @@
 import { BrickState } from '../bricks'
-import { easeInBack, easeOutBack, lighting, specular } from '../lib'
+import {
+  easeInBack,
+  easeInQuart,
+  easeOutBack,
+  lighting,
+  specular,
+} from '../lib'
 import type { UniformsStruct } from '../render-wgpu'
 import { MarchResult, Obj } from './march-result'
 import * as sdf from '@typegpu/sdf'
@@ -11,13 +17,14 @@ const EMPTY = d.f32(1e20)
 export function sdBricks(
   uniforms: d.Infer<UniformsStruct>,
   p: d.v3f,
+  brickVisibility: boolean[],
 ): MarchResult {
   'use gpu'
 
   let dist = EMPTY
-  let color = d.vec3f(1)
   let brickIndex = d.i32(-1)
   for (let i = 0; i < uniforms.bricks.length; i++) {
+    if (!brickVisibility[i]) continue
     const brick = uniforms.bricks[i]
 
     let scale = d.f32(1)
@@ -34,7 +41,6 @@ export function sdBricks(
       uniforms.time,
     )
     if (newDist < dist) {
-      color = brick.color
       brickIndex = i
     }
     dist = sdf.opSmoothUnion(dist, newDist, 0.04)
@@ -82,7 +88,7 @@ export function renderBrick(
     baseColor = std.mix(
       d.vec3f(1, 1, 1),
       baseColor,
-      easeInBack(brick.stateProgress),
+      std.max(0, 0.25 * brick.stateProgress) * 4,
     )
     ambient = 0.8
   }

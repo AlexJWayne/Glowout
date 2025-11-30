@@ -1,6 +1,8 @@
 import * as d from 'typegpu/data'
 
-function hue2rgb(f1: number, f2: number, hue: number) {
+function hue2rgb(f1: number, f2: number, _hue: number) {
+  'use gpu'
+  let hue = _hue
   if (hue < 0.0) hue += 1.0
   else if (hue > 1.0) hue -= 1.0
   let res = d.f32()
@@ -12,6 +14,7 @@ function hue2rgb(f1: number, f2: number, hue: number) {
 }
 
 export function hsl2rgb(hsl: d.v3f) {
+  'use gpu'
   let rgb = d.vec3f()
 
   if (hsl.y == 0.0) {

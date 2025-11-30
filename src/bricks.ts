@@ -4,8 +4,8 @@ import type { Entity, GameWorld, Queries } from './world'
 import * as d from 'typegpu/data'
 
 export const COLS = 6
-export const ROWS = 6
-export const GRID_HEIGHT = 1.4
+export const ROWS = 4
+export const GRID_HEIGHT = 0.8
 export const ALIVE_COUNT = 8
 
 export const brickCount = COLS * ROWS
@@ -65,7 +65,7 @@ function createBrick(gridPos: d.v2u): Entity {
     size: d.vec3f(
       2 / COLS,
       (1 / ROWS) * GRID_HEIGHT,
-      Math.random() * 0.5 + 0.1,
+      Math.random() * 0.4 + 0.1,
     ),
   }
 }
@@ -106,7 +106,7 @@ export function updateBricksState(queries: Queries, elapsed: number) {
           brickEntity.size = d.vec3f(
             2 / COLS,
             (1 / ROWS) * GRID_HEIGHT,
-            Math.random() * 0.5 + 0.1,
+            Math.random() * 0.4 + 0.1,
           )
         }
         break

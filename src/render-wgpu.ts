@@ -6,11 +6,15 @@ import tgpu from 'typegpu'
 import * as d from 'typegpu/data'
 
 const canvas = document.getElementById('wgpu') as HTMLCanvasElement
-canvas.width = 800
-canvas.height = 800
+canvas.width = 1000
+canvas.height = 1000
 listenForInput(canvas)
 
-const root = await tgpu.init()
+const root = await tgpu.init({
+  device: {
+    requiredFeatures: ['timestamp-query'],
+  },
+})
 const ctx = canvas.getContext('webgpu')!
 const presentationFormat = navigator.gpu.getPreferredCanvasFormat()
 ctx.configure({
@@ -76,7 +80,9 @@ const pipeline = root['~unstable']
   })
   .createPipeline()
   .withIndexBuffer(indexBuffer)
-
+// .withPerformanceCallback((start, end) =>
+//   console.log(Number(end - start) / 1_000_000),
+// )
 console.log(
   tgpu.resolve({
     externals: {
