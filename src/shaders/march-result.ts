@@ -13,4 +13,5 @@ export const enum Obj {
   PADDLE,
   BALL,
   BRICK,
+  WALL,
 }

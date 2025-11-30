@@ -4,13 +4,14 @@ import type { UniformsStruct } from '../render-wgpu'
 import { renderBrick, sdBricks } from './bricks'
 import { MarchResult, Obj } from './march-result'
 import { renderPaddle, sdPaddle } from './paddle'
+import { renderWalls, sdWalls } from './walls'
 import * as sdf from '@typegpu/sdf'
 import tgpu, { type TgpuBufferReadonly } from 'typegpu'
 import * as d from 'typegpu/data'
 import * as std from 'typegpu/std'
 
 const MAX_STEPS = tgpu.const(d.i32, d.i32(80))
-const MAX_DISTANCE = tgpu.const(d.f32, d.f32(6))
+const MAX_DISTANCE = tgpu.const(d.f32, d.f32(10))
 const EPSILON = tgpu.const(d.f32, d.f32(0.003))
 const CAMERA_POSTITION = tgpu.const(d.vec3f, d.vec3f(0, 0, 2))
 
@@ -125,6 +126,10 @@ function renderHit(
     return renderBrick(uniforms, result, normal, rayDirection, lightDirection)
   }
 
+  if (result.id === Obj.WALL) {
+    return renderWalls(uniforms, result.pos)
+  }
+
   return d.vec3f(0)
 }
 
@@ -137,8 +142,9 @@ function scene(
   let paddle = sdPaddle(uniforms, p)
   let ball = sdBall(uniforms, p)
   let bricks = sdBricks(uniforms, p, brickVisibility)
+  let walls = sdWalls(p)
 
-  if (paddle < ball && paddle < bricks.distance) {
+  if (paddle < ball && paddle < bricks.distance && paddle < walls) {
     return MarchResult({
       id: Obj.PADDLE,
       pos: p,
@@ -147,13 +153,23 @@ function scene(
     })
   }
 
-  if (ball < paddle && ball < bricks.distance)
+  if (ball < paddle && ball < bricks.distance && ball < walls) {
     return MarchResult({
       id: Obj.BALL,
       pos: p,
       distance: ball,
       brickIndex: -1,
     })
+  }
+
+  if (walls < paddle && walls < bricks.distance && walls < ball) {
+    return MarchResult({
+      id: Obj.WALL,
+      pos: p,
+      distance: walls,
+      brickIndex: -1,
+    })
+  }
 
   return MarchResult({
     id: Obj.BRICK,
