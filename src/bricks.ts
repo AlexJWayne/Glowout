@@ -58,7 +58,7 @@ export function addBrick(world: GameWorld, queries: Queries) {
 function createBrick(gridPos: d.v2u): Entity {
   return {
     brick: {
-      color: hsl2rgb(d.vec3f(Math.random(), 1, 0.6)),
+      color: hsl2rgb(d.vec3f(Math.random(), 1, 0.7)),
       state: BrickState.BIRTH,
       stateProgress: 0,
       location: gridPos,
@@ -115,7 +115,7 @@ export function updateBricksState(queries: Queries, elapsed: number) {
           brick.state = BrickState.BIRTH
           brick.location = getRandomBrickLocation(queries.bricks.entities)
           brick.stateProgress = 0
-          brick.color = hsl2rgb(d.vec3f(Math.random(), 1, 0.5))
+          brick.color = hsl2rgb(d.vec3f(Math.random(), 1, 0.7))
           brickEntity.position = getBrickPosition(brick.location)
           brickEntity.size = d.vec3f(
             2 / COLS,
