@@ -78,7 +78,7 @@ export function renderBrick(
 
   let baseColor = brick.color
 
-  let ambient = 0.2
+  let ambient = 0.5
   if (brick.state === BrickState.DYING) {
     baseColor = std.mix(
       d.vec3f(1, 1, 1),

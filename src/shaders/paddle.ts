@@ -12,8 +12,8 @@ export function sdPaddle(uniforms: d.Infer<UniformsStruct>, p: d.v3f) {
   return (
     sdf.sdBox3d(
       p.sub(d.vec3f(uniforms.paddle.position, 0)),
-      uniforms.paddle.size.div(2).sub(0.02),
-    ) - 0.02
+      uniforms.paddle.size.div(2).sub(0.03),
+    ) - 0.03
   )
 }
 
@@ -32,7 +32,7 @@ export function renderPaddle(
     .mul(2)
 
   // line =
-  let color = d.vec3f(0.2)
+  let color = d.vec3f(0.7)
   color = applyLighting(color, normal, rayDirection, lightDirection)
 
   let line = 1 - std.abs(uv.z)

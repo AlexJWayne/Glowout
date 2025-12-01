@@ -127,10 +127,10 @@ function renderHit(
   }
 
   if (result.id === Obj.WALL) {
-    return renderWalls(uniforms, result.pos)
+    return renderWalls(uniforms, result.pos, normal, lightDirection)
   }
 
-  return d.vec3f(0)
+  return d.vec3f(0.35)
 }
 
 function scene(
@@ -142,7 +142,7 @@ function scene(
   let paddle = sdPaddle(uniforms, p)
   let ball = sdBall(uniforms, p)
   let bricks = sdBricks(uniforms, p, brickVisibility)
-  let walls = sdWalls(p)
+  let walls = sdWalls(uniforms, p)
 
   if (paddle < ball && paddle < bricks.distance && paddle < walls) {
     return MarchResult({
@@ -210,6 +210,13 @@ function getNormal(
     n2 = k2.mul(sdBall(uniforms, p.add(k2.mul(EPSILON.$))))
     n3 = k3.mul(sdBall(uniforms, p.add(k3.mul(EPSILON.$))))
     n4 = k4.mul(sdBall(uniforms, p.add(k4.mul(EPSILON.$))))
+  }
+
+  if (id === Obj.WALL) {
+    n1 = k1.mul(sdWalls(uniforms, p.add(k1.mul(EPSILON.$))))
+    n2 = k2.mul(sdWalls(uniforms, p.add(k2.mul(EPSILON.$))))
+    n3 = k3.mul(sdWalls(uniforms, p.add(k3.mul(EPSILON.$))))
+    n4 = k4.mul(sdWalls(uniforms, p.add(k4.mul(EPSILON.$))))
   }
 
   if (id === Obj.BRICK) {
