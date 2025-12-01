@@ -76,7 +76,7 @@ export function getBrickPosition(gridPos: d.v2u): d.v2f {
   'use gpu'
   return d.vec2f(
     (gridPos.x / COLS) * 2 - 1 + 1 / COLS,
-    1 - (gridPos.y / ROWS + 1 / ROWS) * GRID_HEIGHT,
+    1 - (gridPos.y / ROWS + 1 / ROWS) * GRID_HEIGHT + 0.1,
   )
 }
 

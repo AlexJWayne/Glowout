@@ -11,7 +11,7 @@ import * as d from 'typegpu/data'
 import * as std from 'typegpu/std'
 
 const MAX_STEPS = tgpu.const(d.i32, d.i32(80))
-const MAX_DISTANCE = tgpu.const(d.f32, d.f32(20))
+const MAX_DISTANCE = tgpu.const(d.f32, d.f32(10))
 const EPSILON = tgpu.const(d.f32, d.f32(0.001))
 const CAMERA_POSTITION = tgpu.const(d.vec3f, d.vec3f(0, 0, 2))
 
