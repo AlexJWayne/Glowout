@@ -18,7 +18,7 @@ function createBall(): Entity {
           Math.random() + 0.2,
         ),
       )
-      .mul(1),
+      .mul(0.4),
   }
 }
 

@@ -1,5 +1,5 @@
 import { hsl2rgb } from '../hsl'
-import { easeInQuart, easeInSine, lighting, remap, specular } from '../lib'
+import { easeInSine, lighting, specular } from '../lib'
 import type { UniformsStruct } from '../render-wgpu'
 import type { MarchResult } from './march-result'
 import * as sdf from '@typegpu/sdf'

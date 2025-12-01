@@ -80,9 +80,9 @@ const pipeline = root['~unstable']
   })
   .createPipeline()
   .withIndexBuffer(indexBuffer)
-// .withPerformanceCallback((start, end) =>
-//   console.log(Number(end - start) / 1_000_000),
-// )
+  .withPerformanceCallback((start, end) =>
+    console.log(Number(end - start) / 1_000_000),
+  )
 console.log(
   tgpu.resolve({
     externals: {

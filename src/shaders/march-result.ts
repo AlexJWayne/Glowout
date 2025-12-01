@@ -1,3 +1,5 @@
+import { ALIVE_COUNT } from '../bricks'
+import tgpu from 'typegpu'
 import * as d from 'typegpu/data'
 
 export const MarchResult = d.struct({
@@ -15,3 +17,8 @@ export const enum Obj {
   BRICK,
   WALL,
 }
+
+export const allBricks = tgpu.const(
+  d.arrayOf(d.bool, ALIVE_COUNT),
+  Array(ALIVE_COUNT).fill(true),
+)

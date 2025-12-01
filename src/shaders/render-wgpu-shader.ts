@@ -1,24 +1,19 @@
 import { ALIVE_COUNT } from '../bricks'
-import { lighting, raySphereIntersect, specular } from '../lib'
+import { raySphereIntersect } from '../lib'
 import type { UniformsStruct } from '../render-wgpu'
+import { renderBall, sdBall } from './ball'
 import { renderBrick, sdBricks } from './bricks'
-import { MarchResult, Obj } from './march-result'
+import { MarchResult, Obj, allBricks } from './march-result'
 import { renderPaddle, sdPaddle } from './paddle'
 import { renderWalls, sdWalls } from './walls'
-import * as sdf from '@typegpu/sdf'
 import tgpu, { type TgpuBufferReadonly } from 'typegpu'
 import * as d from 'typegpu/data'
 import * as std from 'typegpu/std'
 
 const MAX_STEPS = tgpu.const(d.i32, d.i32(80))
-const MAX_DISTANCE = tgpu.const(d.f32, d.f32(10))
-const EPSILON = tgpu.const(d.f32, d.f32(0.003))
+const MAX_DISTANCE = tgpu.const(d.f32, d.f32(20))
+const EPSILON = tgpu.const(d.f32, d.f32(0.001))
 const CAMERA_POSTITION = tgpu.const(d.vec3f, d.vec3f(0, 0, 2))
-
-const allBricks = tgpu.const(
-  d.arrayOf(d.bool, ALIVE_COUNT),
-  Array(ALIVE_COUNT).fill(true),
-)
 
 export function createFragmentShader(
   uniforms: TgpuBufferReadonly<UniformsStruct>,
@@ -117,9 +112,7 @@ function renderHit(
     return renderPaddle(uniforms, result, normal, rayDirection, lightDirection)
 
   if (result.id === Obj.BALL) {
-    const base = lighting(d.vec3f(1, 1, 0), normal, lightDirection, 0.1)
-    const spec = specular(normal, rayDirection, lightDirection, d.f32(3))
-    return base.add(spec)
+    return renderBall(uniforms, result, normal, rayDirection, lightDirection)
   }
 
   if (result.id === Obj.BRICK) {
@@ -235,10 +228,4 @@ function getNormal(
   }
 
   return std.normalize(n1.add(n2).add(n3).add(n4))
-}
-
-function sdBall(uniforms: d.Infer<UniformsStruct>, p: d.v3f) {
-  'use gpu'
-  const position3 = d.vec3f(uniforms.ball.position, 0)
-  return sdf.sdSphere(p.sub(position3), uniforms.ball.radius)
 }
