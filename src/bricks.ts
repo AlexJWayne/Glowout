@@ -125,3 +125,10 @@ export function updateBricksState(queries: Queries, elapsed: number) {
     }
   }
 }
+
+export function resetBricks(queries: Queries) {
+  for (const brickEntity of queries.bricks.entities) {
+    brickEntity.brick.state = BrickState.DYING
+    brickEntity.brick.stateProgress = 0
+  }
+}

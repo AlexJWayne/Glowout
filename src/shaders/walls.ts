@@ -53,8 +53,15 @@ export function renderWalls(
   const hue = std.fract((huePt.x + huePt.y) * 0.2 + uniforms.time * 0.2)
   let color = hsl2rgb(d.vec3f(hue, 1, 0.75))
 
-  let fade = std.pow(remap(p.z, 0, -10, 1, 0), 5) // distance fade
-  fade *= std.clamp(remap(p.y, -1.0, -1.25, 1, 0), 0, 1) // gutter
+  let fade = std.pow(
+    remap(p.z, d.f32(0), d.f32(-10), d.f32(1), d.f32(0)), //
+    5,
+  ) // distance fade
+  fade *= std.clamp(
+    remap(p.y, d.f32(-1.0), d.f32(-1.25), d.f32(1), d.f32(0)),
+    0,
+    1,
+  ) // gutter
 
   color = lighting(color, normal, ligthDirection, 0.5)
   color = color.add(renderBallSpot(p, uniforms.ball.position))
@@ -81,7 +88,7 @@ function renderBlockShadow(uniforms: d.Infer<UniformsStruct>, p: d.v3f) {
   const foo = sdBricks(uniforms, p, allBricks.$)
   return (
     std.pow(
-      std.clamp(1 - remap(foo.distance, 0, 0.2, 0, 1), 0, 1), //
+      std.clamp(1 - remap(foo.distance, 0.0, 0.2, 0.0, 1.0), 0, 1), //
       3,
     ) * 0.4
   )

@@ -1,7 +1,9 @@
-import { BrickState, addBrick } from './bricks'
+import { resetBall } from './ball'
+import { BrickState, addBrick, resetBricks } from './bricks'
 import { mouse } from './input'
 import { remap } from './lib'
 import type { GameWorld, Queries } from './world'
+import * as d from 'typegpu/data'
 import * as std from 'typegpu/std'
 
 export function movePaddle(queries: Queries) {
@@ -40,8 +42,8 @@ export function bounceBallOnWalls(queries: Queries) {
     velocity.y = -velocity.y
   }
   if (position.y - radius < -1.5 && velocity.y < 0) {
-    velocity.y = -velocity.y
-    ballEntity.velocity = std.normalize(velocity)
+    resetBall(ballEntity)
+    resetBricks(queries)
   }
 }
 
@@ -66,7 +68,7 @@ export function hitBallWithPaddle(queries: Queries) {
 
   if (ballEntity.position.x > left && ballEntity.position.x < right) {
     const speed = std.length(ballEntity.velocity) + 0.2
-    const angle = remap(ballEntity.position.x, left, right, -1, 1)
+    const angle = remap(ballEntity.position.x, left, right, d.f32(-1), d.f32(1))
 
     ballEntity.velocity.y = -ballEntity.velocity.y
     ballEntity.velocity.x += angle * 1.5

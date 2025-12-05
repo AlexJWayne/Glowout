@@ -7,16 +7,27 @@ export function addBall(world: GameWorld) {
 }
 
 function createBall(): Entity {
-  return {
+  const ballEntity = {
     ball: { radius: 0.06 },
-    position: d.vec2f(0, 0),
-    velocity: std
+    position: d.vec2f(0, -1.3),
+    velocity: d.vec2f(),
+  }
+  resetBall(ballEntity)
+  return ballEntity
+}
+
+export function resetBall(ballEntity: Entity) {
+  ballEntity.velocity = d.vec2f(0)
+
+  setTimeout(() => {
+    ballEntity.position = d.vec2f(0, -0.5)
+    ballEntity.velocity = std
       .normalize(
         d.vec2f(
           Math.random() * 2 - 1, //
           Math.random() + 0.2,
         ),
       )
-      .mul(0.4),
-  }
+      .mul(0.4)
+  }, 1000)
 }
