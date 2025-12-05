@@ -103,6 +103,37 @@ export function raySphereIntersect(
   return disc >= 0.0
 }
 
+export function rayBoxIntersect(
+  rayOrigin: d.v3f,
+  rayDirection: d.v3f,
+  boxCenter: d.v3f,
+  boxSize: d.v3f,
+) {
+  'use gpu'
+
+  // Calculate box bounds
+  const boxMin = boxCenter.sub(boxSize.mul(0.5))
+  const boxMax = boxCenter.add(boxSize.mul(0.5))
+
+  // Inverse ray direction for efficiency
+  const invDir = d.vec3f(1).div(rayDirection)
+
+  // Calculate intersections with box planes
+  const t1 = boxMin.sub(rayOrigin).mul(invDir)
+  const t2 = boxMax.sub(rayOrigin).mul(invDir)
+
+  // Swap if needed (handle negative directions)
+  const tmin = std.min(t1, t2)
+  const tmax = std.max(t1, t2)
+
+  // Find the largest tmin and smallest tmax
+  const tNear = std.max(std.max(tmin.x, tmin.y), tmin.z)
+  const tFar = std.min(std.min(tmax.x, tmax.y), tmax.z)
+
+  // Ray intersects if tNear <= tFar and tFar >= 0
+  return tFar >= tNear && tFar >= 0.0
+}
+
 export function remap(
   value: number,
   inMin: number,

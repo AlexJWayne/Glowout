@@ -1,5 +1,4 @@
-import { fillCircle } from './lib'
-import type { Entity, GameWorld, Queries } from './world'
+import type { Entity, GameWorld } from './world'
 import * as d from 'typegpu/data'
 import * as std from 'typegpu/std'
 
@@ -20,19 +19,4 @@ function createBall(): Entity {
       )
       .mul(0.4),
   }
-}
-
-export function renderBall(ctx: CanvasRenderingContext2D, queries: Queries) {
-  const ballEntity = queries.ball.first
-  if (!ballEntity) return
-
-  const {
-    position: { x, y },
-    ball: { radius },
-  } = ballEntity
-
-  ctx.save()
-  ctx.fillStyle = '#ff0'
-  fillCircle(ctx, { x, y, radius })
-  ctx.restore()
 }

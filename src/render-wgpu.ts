@@ -5,9 +5,15 @@ import type { Queries } from './world'
 import tgpu from 'typegpu'
 import * as d from 'typegpu/data'
 
+const SUPERSAMPLING = 1
+
 const canvas = document.getElementById('wgpu') as HTMLCanvasElement
-canvas.width = 1000
-canvas.height = 1000
+canvas.style.width = '1000px'
+canvas.style.height = '1000px'
+
+canvas.width = 1000 * SUPERSAMPLING
+canvas.height = 1000 * SUPERSAMPLING
+
 listenForInput(canvas)
 
 const root = await tgpu.init({

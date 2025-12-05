@@ -55,21 +55,26 @@ export function addBrick(world: GameWorld, queries: Queries) {
   world.add(createBrick(location))
 }
 
-function createBrick(gridPos: d.v2u): Entity {
-  return {
-    brick: {
-      color: hsl2rgb(d.vec3f(Math.random(), 1, 0.7)),
-      state: BrickState.BIRTH,
-      stateProgress: 0,
-      location: gridPos,
-    },
-    position: getBrickPosition(gridPos),
-    size: d.vec3f(
-      2 / COLS,
-      (1 / ROWS) * GRID_HEIGHT,
-      Math.random() * 0.4 + 0.1,
-    ),
+function createBrick(
+  gridPos: d.v2u,
+  existing?: With<Entity, 'brick' | 'position' | 'size'>,
+): Entity {
+  const entity = existing ?? ({} as With<Entity, 'brick' | 'position' | 'size'>)
+
+  entity.brick = {
+    color: hsl2rgb(d.vec3f(Math.random(), 1, 0.7)),
+    state: BrickState.BIRTH,
+    stateProgress: 0,
+    location: gridPos,
   }
+  entity.position = getBrickPosition(gridPos)
+  entity.size = d.vec3f(
+    2 / COLS,
+    (1 / ROWS) * GRID_HEIGHT,
+    Math.random() * 0.4 + 0.1,
+  )
+
+  return entity
 }
 
 export function getBrickPosition(gridPos: d.v2u): d.v2f {
@@ -112,15 +117,9 @@ export function updateBricksState(queries: Queries, elapsed: number) {
         brick.stateProgress += elapsed * 2
 
         if (brick.stateProgress > 1) {
-          brick.state = BrickState.BIRTH
-          brick.location = getRandomBrickLocation(queries.bricks.entities)
-          brick.stateProgress = 0
-          brick.color = hsl2rgb(d.vec3f(Math.random(), 1, 0.7))
-          brickEntity.position = getBrickPosition(brick.location)
-          brickEntity.size = d.vec3f(
-            2 / COLS,
-            (1 / ROWS) * GRID_HEIGHT,
-            Math.random() * 0.4 + 0.1,
+          createBrick(
+            getRandomBrickLocation(queries.bricks.entities),
+            brickEntity,
           )
         }
         break

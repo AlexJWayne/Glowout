@@ -112,7 +112,7 @@ function renderHit(
     return renderPaddle(uniforms, result, normal, rayDirection, lightDirection)
 
   if (result.id === Obj.BALL) {
-    return renderBall(uniforms, result, normal, rayDirection, lightDirection)
+    return renderBall(uniforms, normal, rayDirection)
   }
 
   if (result.id === Obj.BRICK) {

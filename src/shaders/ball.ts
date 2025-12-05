@@ -1,9 +1,6 @@
 import { hsl2rgb } from '../hsl'
-import { lighting, specular } from '../lib'
 import type { UniformsStruct } from '../render-wgpu'
-import type { MarchResult } from './march-result'
 import * as sdf from '@typegpu/sdf'
-import tgpu from 'typegpu'
 import * as d from 'typegpu/data'
 import * as std from 'typegpu/std'
 
@@ -16,10 +13,8 @@ export function sdBall(uniforms: d.Infer<UniformsStruct>, p: d.v3f): number {
 
 export function renderBall(
   uniforms: d.Infer<UniformsStruct>,
-  result: d.Infer<MarchResult>,
   normal: d.v3f,
   rayDirection: d.v3f,
-  lightDirection: d.v3f,
 ): d.v3f {
   'use gpu'
 
