@@ -5,14 +5,15 @@ import type { Queries } from './world'
 import tgpu from 'typegpu'
 import * as d from 'typegpu/data'
 
+const CANVAS_SIZE = Math.min(1000, window.innerWidth, window.innerHeight)
 const SUPERSAMPLING = 1
 
 const canvas = document.getElementById('wgpu') as HTMLCanvasElement
-canvas.style.width = '1000px'
-canvas.style.height = '1000px'
+canvas.style.width = `${CANVAS_SIZE}px`
+canvas.style.height = `${CANVAS_SIZE}px`
 
-canvas.width = 1000 * SUPERSAMPLING
-canvas.height = 1000 * SUPERSAMPLING
+canvas.width = CANVAS_SIZE * SUPERSAMPLING
+canvas.height = CANVAS_SIZE * SUPERSAMPLING
 
 listenForInput(canvas)
 
