@@ -1,5 +1,4 @@
 import { hsl2rgb } from './hsl'
-import { fillCenterRect, strokeCenterRect } from './lib'
 import type { Entity, GameWorld, Queries } from './world'
 import type { With } from 'miniplex'
 import * as d from 'typegpu/data'
@@ -125,31 +124,4 @@ export function updateBricksState(queries: Queries, elapsed: number) {
         break
     }
   }
-}
-
-export function renderBricks(ctx: CanvasRenderingContext2D, queries: Queries) {
-  ctx.save()
-  ctx.fillStyle = '#f0f'
-  for (const brickEntity of queries.bricks.entities) {
-    const { position, size } = brickEntity
-    fillCenterRect(ctx, {
-      x: position.x,
-      y: position.y,
-      width: size.x,
-      height: size.y,
-    })
-  }
-
-  ctx.strokeStyle = '#808'
-  ctx.lineWidth = 0.005
-  for (const brickEntity of queries.bricks.entities) {
-    const { position, size } = brickEntity
-    strokeCenterRect(ctx, {
-      x: position.x,
-      y: position.y,
-      width: size.x,
-      height: size.y,
-    })
-  }
-  ctx.restore()
 }
