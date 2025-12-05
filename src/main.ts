@@ -10,7 +10,7 @@ import {
 } from './systems'
 import { createWorld } from './world'
 
-const { world, queries } = createWorld()
+const { queries } = createWorld()
 
 let lastTimestampMs = 0
 
@@ -22,7 +22,7 @@ async function tick(timestampMs: DOMHighResTimeStamp) {
   moveBall(queries, elapsed)
   bounceBallOnWalls(queries)
   hitBallWithPaddle(queries)
-  hitBricksWithBall(world, queries)
+  hitBricksWithBall(queries)
   updateBricksState(queries, elapsed)
 
   // renderGame2d(queries)

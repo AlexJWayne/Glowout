@@ -1,8 +1,8 @@
 import { resetBall } from './ball'
-import { BrickState, addBrick, resetBricks } from './bricks'
+import { BrickState, resetBricks } from './bricks'
 import { mouse } from './input'
 import { remap } from './lib'
-import type { GameWorld, Queries } from './world'
+import type { Queries } from './world'
 import * as d from 'typegpu/data'
 import * as std from 'typegpu/std'
 
@@ -76,7 +76,7 @@ export function hitBallWithPaddle(queries: Queries) {
   }
 }
 
-export function hitBricksWithBall(world: GameWorld, queries: Queries) {
+export function hitBricksWithBall(queries: Queries) {
   const ballEntity = queries.ball.first
   if (!ballEntity) return
 

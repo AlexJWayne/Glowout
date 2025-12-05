@@ -1,4 +1,3 @@
-import { ALIVE_COUNT } from '../bricks'
 import { hsl2rgb } from '../hsl'
 import { lighting, remap } from '../lib'
 import type { UniformsStruct } from '../render-wgpu'

@@ -1,5 +1,5 @@
 import { BrickState } from '../bricks'
-import { easeOutBack, lighting, remap, specular } from '../lib'
+import { easeOutBack, lighting, specular } from '../lib'
 import type { UniformsStruct } from '../render-wgpu'
 import { MarchResult, Obj } from './march-result'
 import * as sdf from '@typegpu/sdf'
